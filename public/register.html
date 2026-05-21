@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — Smart Disaster Response</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body class="auth-page">
+
+  <div class="auth-container">
+
+    <!-- Header -->
+    <div class="auth-header">
+      <span class="logo-icon">🚨</span>
+      <h1>Smart Disaster Response</h1>
+      <p>Create your account to get started</p>
+    </div>
+
+    <!-- Body -->
+    <div class="auth-body">
+      <h2>Create Account</h2>
+
+      <!-- Role Selector -->
+      <p style="font-size:0.85rem;color:#666;margin-bottom:12px;">Register as:</p>
+      <div class="role-selector">
+        <button type="button" class="role-btn active" data-role="user" onclick="selectRole('user', this)">
+          <span class="role-icon">👤</span>Citizen
+        </button>
+        <button type="button" class="role-btn" data-role="volunteer" onclick="selectRole('volunteer', this)">
+          <span class="role-icon">🤝</span>Volunteer
+        </button>
+      </div>
+      <p style="font-size:0.78rem;color:#aaa;margin-top:-8px;">
+        Authority access is restricted to the system administrator.
+      </p>
+
+      <!-- Alert -->
+      <div id="alertBox"></div>
+
+      <!-- Form -->
+      <form id="registerForm" novalidate>
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" placeholder="John Doe" required />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com" required />
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" placeholder="+1 234 567 8900" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" placeholder="Minimum 6 characters" required minlength="6" />
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password', this)" tabindex="-1">👁️</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="confirmPassword" placeholder="Repeat password" required />
+            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)" tabindex="-1">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="registerBtn">
+          Create Account
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="index.html">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/auth.js"></script>
+  <script>
+    let selectedRole = 'user';
+
+    function selectRole(role, btn) {
+      selectedRole = role;
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    window.getSelectedRole = () => selectedRole;
+  </script>
+
+</body>
+</html>

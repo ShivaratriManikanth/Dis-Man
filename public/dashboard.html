@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Dashboard — Smart Disaster Response</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="brand">
+      <span class="icon">🚨</span>
+      Smart Disaster Response
+    </div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="emergency.html">New Request</a>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="page-wrapper">
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+      <div>
+        <h2 id="welcomeName">Welcome back!</h2>
+        <p id="welcomeEmail">Loading your profile…</p>
+      </div>
+      <span class="welcome-icon">🏠</span>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card red">
+        <div class="stat-number" id="totalRequests">—</div>
+        <div class="stat-label">Total Requests</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-number" id="pendingRequests">—</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-number" id="completedRequests">—</div>
+        <div class="stat-label">Completed</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section-header">
+      <h2>Quick Actions</h2>
+    </div>
+    <div class="quick-actions">
+      <a href="emergency.html" class="action-card">
+        <span class="action-icon">🆘</span>
+        <div class="action-label">New Emergency</div>
+        <div class="action-desc">Submit an emergency request</div>
+      </a>
+      <div class="action-card" onclick="document.getElementById('myRequestsSection').scrollIntoView({behavior:'smooth'})">
+        <span class="action-icon">📋</span>
+        <div class="action-label">My Requests</div>
+        <div class="action-desc">View your submitted requests</div>
+      </div>
+    </div>
+
+    <!-- My Requests -->
+    <div id="myRequestsSection">
+      <div class="section-header">
+        <h2>My Emergency Requests</h2>
+        <a href="emergency.html" class="btn btn-primary">+ New Request</a>
+      </div>
+
+      <div id="alertBox"></div>
+      <div id="loadingSpinner" class="spinner"></div>
+      <div id="requestsContainer"></div>
+    </div>
+
+  </main>
+
+  <script type="module" src="js/dashboard.js"></script>
+  <!-- Auth logout handler -->
+  <script type="module">
+    import { auth } from './js/firebase-config.js';
+    import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = 'index.html';
+    });
+  </script>
+
+</body>
+</html>

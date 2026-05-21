@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Local env files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor/Tool directories
+.claude/
+.gemini/
+.vscode/
+.idea/

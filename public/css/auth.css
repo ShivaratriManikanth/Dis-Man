@@ -1,0 +1,216 @@
+/* ============================================================
+   AUTH STYLES — Login & Register pages
+   ============================================================ */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #e63946 100%);
+  padding: 20px;
+}
+
+.auth-container {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+}
+
+/* Logo / Header band */
+.auth-header {
+  background: linear-gradient(135deg, #1d3557, #e63946);
+  color: #fff;
+  text-align: center;
+  padding: 36px 30px 30px;
+}
+
+.auth-header .logo-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.auth-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.auth-header p {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+/* Form area */
+.auth-body {
+  padding: 32px 36px 36px;
+}
+
+.auth-body h2 {
+  font-size: 1.25rem;
+  color: #1d3557;
+  margin-bottom: 22px;
+  font-weight: 700;
+}
+
+/* Form group */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  background: #fafafa;
+  color: #333;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #457b9d;
+  box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.15);
+  background: #fff;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+/* Submit button full width */
+.btn-full {
+  width: 100%;
+  padding: 13px;
+  font-size: 1rem;
+}
+
+/* Auth footer link */
+.auth-footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.auth-footer a {
+  color: #e63946;
+  font-weight: 600;
+}
+
+/* Role selector (login page) */
+.role-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fafafa;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.role-btn:hover {
+  border-color: #457b9d;
+  color: #457b9d;
+}
+
+.role-btn.active {
+  border-color: #e63946;
+  background: #fff5f5;
+  color: #e63946;
+}
+
+.role-btn .role-icon {
+  display: block;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: #aaa;
+  font-size: 0.8rem;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+@media (max-width: 480px) {
+  .auth-body { padding: 24px 20px 28px; }
+  .auth-header { padding: 26px 20px 22px; }
+  .role-selector { flex-wrap: wrap; }
+}
+
+/* Password visibility toggle */
+.password-wrapper {
+  position: relative;
+  display: block;
+}
+
+.password-wrapper input {
+  padding-right: 42px !important;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 1.15rem;
+  color: #666;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.toggle-password:hover {
+  opacity: 0.8;
+}
+
+.toggle-password:active {
+  transform: translateY(-50%) scale(0.9);
+}
+

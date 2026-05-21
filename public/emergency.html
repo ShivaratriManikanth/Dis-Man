@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emergency Request — Smart Disaster Response</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="brand">
+      <span class="icon">🚨</span>
+      Smart Disaster Response
+    </div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="emergency.html">New Request</a>
+      <button id="logoutBtn">Logout</button>
+    </nav>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="page-wrapper">
+
+    <div class="page-header">
+      <h1>🆘 Submit Emergency Request</h1>
+      <p>Fill in the details below. Your location will be captured automatically.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 28px;">
+
+      <!-- LEFT: Form -->
+      <div class="card">
+        <h3 style="color:#1d3557;margin-bottom:20px;font-size:1.1rem;">Request Details</h3>
+
+        <div id="alertBox"></div>
+
+        <form id="emergencyForm" class="request-form" novalidate>
+
+          <div class="form-group">
+            <label for="disasterType">Disaster Type *</label>
+            <select id="disasterType" required>
+              <option value="">— Select type —</option>
+              <option value="Flood">🌊 Flood</option>
+              <option value="Fire">🔥 Fire</option>
+              <option value="Earthquake">🌍 Earthquake</option>
+              <option value="Cyclone">🌀 Cyclone</option>
+              <option value="Landslide">⛰️ Landslide</option>
+              <option value="Medical Emergency">🏥 Medical Emergency</option>
+              <option value="Building Collapse">🏚️ Building Collapse</option>
+              <option value="Chemical Spill">☣️ Chemical Spill</option>
+              <option value="Tsunami">🌊 Tsunami</option>
+              <option value="Other">🔶 Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description *</label>
+            <textarea id="description" placeholder="Describe the emergency in detail. Include number of people affected, severity, any special needs…" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="severity">Severity</label>
+            <select id="severity">
+              <option value="Low">🟢 Low</option>
+              <option value="Medium" selected>🟡 Medium</option>
+              <option value="High">🔴 High</option>
+              <option value="Critical">🚨 Critical</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="contactName">Contact Person</label>
+            <input type="text" id="contactName" placeholder="Who should responders contact?" />
+          </div>
+
+          <div class="form-group">
+            <label for="contactPhone">Contact Phone</label>
+            <input type="tel" id="contactPhone" placeholder="+1 234 567 8900" />
+          </div>
+
+          <!-- Location status -->
+          <div class="location-status" id="locationStatus">
+            <div class="location-dot" id="locationDot"></div>
+            <span id="locationText">Detecting your location…</span>
+          </div>
+
+          <!-- Hidden location fields -->
+          <input type="hidden" id="latitude" />
+          <input type="hidden" id="longitude" />
+
+          <button type="button" class="btn btn-outline mt-1 mb-2" id="refreshLocationBtn" style="width:100%">
+            📍 Refresh Location
+          </button>
+
+          <button type="submit" class="btn btn-primary" style="width:100%" id="submitBtn">
+            🆘 Submit Emergency Request
+          </button>
+        </form>
+      </div>
+
+      <!-- RIGHT: Map -->
+      <div>
+        <div class="card map-wrap" style="padding: 20px;">
+          <h3>📍 Your Location</h3>
+          <p style="color:#888;font-size:0.85rem;margin:6px 0 14px;">
+            The pin shows where responders will be sent.
+          </p>
+          <div id="map"></div>
+          <div class="coords-display" id="coordsDisplay">Waiting for GPS…</div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Google Maps JS API — replace AIzaSyAcWQBQEDw_9_YXamLaiJPijzMpy0T6Vhw -->
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAcWQBQEDw_9_YXamLaiJPijzMpy0T6Vhw&callback=initMap"
+    async defer>
+  </script>
+
+  <script type="module" src="js/emergency.js"></script>
+  <script type="module">
+    import { auth } from './js/firebase-config.js';
+    import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = 'index.html';
+    });
+  </script>
+
+  <!-- Responsive: stack on small screens -->
+  <style>
+    @media (max-width: 768px) {
+      .page-wrapper > div[style*="grid"] {
+        display: block !important;
+      }
+      .page-wrapper > div[style*="grid"] > div:last-child {
+        margin-top: 24px;
+      }
+    }
+  </style>
+
+</body>
+</html>
