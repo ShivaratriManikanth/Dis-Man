@@ -6,6 +6,9 @@
   <title>Login — Smart Disaster Response</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/auth.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="images/logo.png" />
+  <meta name="theme-color" content="#1d3557" />
 </head>
 <body class="auth-page">
 
@@ -75,6 +78,17 @@
 
     // Expose for auth.js
     window.getSelectedRole = () => selectedRole;
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((reg) => console.log('Service Worker registered successfully!', reg))
+          .catch((err) => console.error('Service Worker registration failed:', err));
+      });
+    }
   </script>
 
 </body>
