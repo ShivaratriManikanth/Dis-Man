@@ -65,6 +65,38 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
       margin-bottom: 28px;
     }
+
+    /* Archive styling */
+    .archive-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 0px;
+      padding: 0 20px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .archive-tab-btn {
+      padding: 14px 20px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .archive-tab-btn.active {
+      color: #1d3557;
+      border-bottom-color: #1d3557;
+    }
+    .archive-tab-content {
+      display: none;
+      padding: 20px;
+    }
+    .archive-tab-content.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -183,6 +215,39 @@
       </div>
     </div>
 
+    <!-- Deleted Archive Section -->
+    <div class="card" style="padding:0; margin-bottom: 28px; border-top: 4px solid #64748b;">
+      <div class="section-header" style="margin-bottom:0; border-bottom:1px solid #f1f5f9; padding:20px;">
+        <h3 style="margin:0; font-size:1.15rem; color:#475569;">🗑️ Deleted Archive (Recycle Bin)</h3>
+      </div>
+      <div class="archive-tabs">
+        <button class="archive-tab-btn active" onclick="switchArchiveTab('delRequests')">Deleted Requests</button>
+        <button class="archive-tab-btn" onclick="switchArchiveTab('delCitizens')">Deleted Citizens</button>
+        <button class="archive-tab-btn" onclick="switchArchiveTab('delVolunteers')">Deleted Volunteers</button>
+      </div>
+      
+      <!-- Deleted Requests Tab Content -->
+      <div id="delRequests" class="archive-tab-content active">
+        <div class="table-wrap" id="deletedRequestsContainer" style="max-height: 300px; overflow-y: auto;">
+          <p style="color:#888;font-size:0.85rem;padding:20px;">Loading archive...</p>
+        </div>
+      </div>
+
+      <!-- Deleted Citizens Tab Content -->
+      <div id="delCitizens" class="archive-tab-content">
+        <div class="table-wrap" id="deletedCitizensContainer" style="max-height: 300px; overflow-y: auto;">
+          <p style="color:#888;font-size:0.85rem;padding:20px;">Loading archive...</p>
+        </div>
+      </div>
+
+      <!-- Deleted Volunteers Tab Content -->
+      <div id="delVolunteers" class="archive-tab-content">
+        <div class="table-wrap" id="deletedVolunteersContainer" style="max-height: 300px; overflow-y: auto;">
+          <p style="color:#888;font-size:0.85rem;padding:20px;">Loading archive...</p>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Edit User Modal -->
@@ -238,6 +303,29 @@
       if (window.pendingRequestsToPlot) {
         window.plotMapMarkersGlobal(window.pendingRequestsToPlot);
       }
+    };
+
+    // Tab switching for the archive section
+    window.switchArchiveTab = function (tabId) {
+      // Toggle active state for tab buttons
+      const buttons = document.querySelectorAll('.archive-tab-btn');
+      buttons.forEach(btn => {
+        if (btn.getAttribute('onclick').includes(tabId)) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Toggle active state for content containers
+      const contents = document.querySelectorAll('.archive-tab-content');
+      contents.forEach(content => {
+        if (content.id === tabId) {
+          content.classList.add('active');
+        } else {
+          content.classList.remove('active');
+        }
+      });
     };
   </script>
   <!-- Google Maps JS API -->

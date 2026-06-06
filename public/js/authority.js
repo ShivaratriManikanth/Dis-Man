@@ -14,6 +14,7 @@ import {
   getDocs,
   doc,
   getDoc,
+  setDoc,
   updateDoc,
   serverTimestamp,
   query,
@@ -49,6 +50,7 @@ onAuthStateChanged(auth, async (user) => {
     `Signed in as ${displayName} (${user.email})`;
 
   fetchAllRequests();
+  fetchDeletedData();
 });
 
 
@@ -236,23 +238,39 @@ window.saveUser = async function () {
   }
 };
 
-function deleteUser(uid, btn) {
+async function deleteUser(uid, btn) {
   const orig = btn?.textContent;
   if (btn) { btn.disabled = true; btn.textContent = '…'; }
 
-  deleteDoc(doc(db, 'Users', uid))
-    .then(() => {
-      allCitizens   = allCitizens.filter(u => u.uid !== uid);
-      allVolunteers = allVolunteers.filter(u => u.uid !== uid);
-      renderUsersList('citizensContainer',   allCitizens);
-      renderUsersList('volunteersContainer', allVolunteers);
-      showAlert('User deleted successfully.', 'success');
-    })
-    .catch(err => {
-      console.error('Delete error:', err);
-      alert('Failed to delete user: ' + err.message);
-      if (btn) { btn.disabled = false; btn.textContent = orig; }
+  try {
+    const user = [...allCitizens, ...allVolunteers].find(u => u.uid === uid);
+    if (!user) {
+      throw new Error('User data not found in local cache');
+    }
+    
+    // 1. Save copy to DeletedUsers
+    await setDoc(doc(db, 'DeletedUsers', uid), {
+      ...user,
+      deletedAt: serverTimestamp()
     });
+
+    // 2. Delete from active Users
+    await deleteDoc(doc(db, 'Users', uid));
+
+    // 3. Update active cache and UI
+    allCitizens   = allCitizens.filter(u => u.uid !== uid);
+    allVolunteers = allVolunteers.filter(u => u.uid !== uid);
+    renderUsersList('citizensContainer',   allCitizens);
+    renderUsersList('volunteersContainer', allVolunteers);
+    showAlert('User moved to Deleted Archive.', 'success');
+
+    // 4. Refresh archive
+    fetchDeletedData();
+  } catch (err) {
+    console.error('Delete error:', err);
+    alert('Failed to delete user: ' + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
 }
 
 // ---- User Search Event Listeners ---------------------------
@@ -461,14 +479,29 @@ window.deleteRequest = async function (requestId, btn) {
   btn.innerHTML = '⏳...';
 
   try {
+    const reqData = allRequests.find(r => r.id === requestId);
+    if (!reqData) {
+      throw new Error('Request not found in local cache');
+    }
+
+    // 1. Save copy to DeletedRequests
+    await setDoc(doc(db, 'DeletedRequests', requestId), {
+      ...reqData,
+      deletedAt: serverTimestamp()
+    });
+
+    // 2. Delete from active Requests
     await deleteDoc(doc(db, 'Requests', requestId));
     
-    // Update local cache
+    // 3. Update local cache
     allRequests = allRequests.filter(r => r.id !== requestId);
     
-    showAlert('Request deleted successfully.', 'success');
+    showAlert('Request moved to Deleted Archive.', 'success');
     applyFilters();   // Re-render
     updateStats(allRequests);
+
+    // 4. Refresh archive
+    fetchDeletedData();
   } catch (err) {
     console.error('Delete error:', err);
     showAlert('Failed to delete: ' + err.message, 'error');
@@ -615,3 +648,226 @@ function showAlert(message, type = 'info') {
     </div>`;
   setTimeout(() => { box.innerHTML = ''; }, 5000);
 }
+
+// ---- DELETED ARCHIVE OPERATIONS ----------------------------
+let deletedRequests = [];
+let deletedUsers = [];
+
+async function fetchDeletedData() {
+  try {
+    // 1. Fetch deleted requests
+    const reqSnap = await getDocs(collection(db, 'DeletedRequests'));
+    deletedRequests = [];
+    reqSnap.forEach(d => {
+      deletedRequests.push({ id: d.id, ...d.data() });
+    });
+
+    // 2. Fetch deleted users
+    const userSnap = await getDocs(collection(db, 'DeletedUsers'));
+    deletedUsers = [];
+    userSnap.forEach(d => {
+      deletedUsers.push({ uid: d.id, ...d.data() });
+    });
+
+    renderDeletedRequests();
+    renderDeletedUsers();
+  } catch (err) {
+    console.error('Failed to fetch deleted archive:', err);
+  }
+}
+window.fetchDeletedData = fetchDeletedData;
+
+function renderDeletedRequests() {
+  const container = document.getElementById('deletedRequestsContainer');
+  if (!container) return;
+
+  if (deletedRequests.length === 0) {
+    container.innerHTML = '<p style="color:#888;font-size:0.85rem;padding:20px;">No deleted requests.</p>';
+    return;
+  }
+
+  let html = `
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th>ID</th><th>TYPE</th><th>SEVERITY</th><th>DELETED AT</th><th>ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  deletedRequests.forEach(r => {
+    const d = r.deletedAt ? new Date(r.deletedAt.seconds * 1000) : null;
+    const deletedDate = d
+      ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+      : 'N/A';
+
+    html += `
+      <tr>
+        <td data-label="ID" style="font-size:0.72rem;color:#888;">${r.id.substring(0, 5)}…</td>
+        <td data-label="TYPE"><strong>${esc(r.type)}</strong></td>
+        <td data-label="SEVERITY"><span style="font-weight:bold;color:${r.severity === 'Critical' ? '#e63946' : '#f4a261'}">${esc(r.severity || 'Medium')}</span></td>
+        <td data-label="DELETED AT" style="color:#64748b;">${deletedDate}</td>
+        <td data-label="ACTIONS">
+          <div style="display:flex;gap:6px;">
+            <button onclick="restoreRequest('${r.id}', this)" class="btn" style="background:#f1f5f9;color:#1d3557;padding:5px 12px;font-size:11px;border-radius:4px;border:1px solid #cbd5e1;font-weight:600;">Restore</button>
+            <button onclick="permanentlyDeleteRequest('${r.id}', this)" class="btn" style="background:#fee2e2;color:#ef4444;padding:5px 12px;font-size:11px;border-radius:4px;border:1px solid #fecaca;font-weight:600;">Delete Permanently</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function renderDeletedUsers() {
+  const citizensContainer = document.getElementById('deletedCitizensContainer');
+  const volunteersContainer = document.getElementById('deletedVolunteersContainer');
+  
+  const deletedCitizens = deletedUsers.filter(u => u.role === 'user' || !u.role);
+  const deletedVolunteers = deletedUsers.filter(u => u.role === 'volunteer');
+
+  const renderList = (container, list) => {
+    if (!container) return;
+    if (list.length === 0) {
+      container.innerHTML = '<p style="color:#888;font-size:0.85rem;padding:20px;">No users in this archive.</p>';
+      return;
+    }
+
+    let html = `
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th>NAME</th><th>EMAIL</th><th>PHONE</th><th>DELETED AT</th><th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    list.forEach(u => {
+      const d = u.deletedAt ? new Date(u.deletedAt.seconds * 1000) : null;
+      const deletedDate = d
+        ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+        : 'N/A';
+
+      html += `
+        <tr>
+          <td data-label="NAME"><strong>${esc(u.name)}</strong></td>
+          <td data-label="EMAIL" style="color:#2563eb;">${esc(u.email)}</td>
+          <td data-label="PHONE" style="color:#475569;">${esc(u.phone || '—')}</td>
+          <td data-label="DELETED AT" style="color:#64748b;">${deletedDate}</td>
+          <td data-label="ACTIONS">
+            <div style="display:flex;gap:6px;">
+              <button onclick="restoreUser('${u.uid}', this)" class="btn" style="background:#f1f5f9;color:#1d3557;padding:5px 12px;font-size:11px;border-radius:4px;border:1px solid #cbd5e1;font-weight:600;">Restore</button>
+              <button onclick="permanentlyDeleteUser('${u.uid}', this)" class="btn" style="background:#fee2e2;color:#ef4444;padding:5px 12px;font-size:11px;border-radius:4px;border:1px solid #fecaca;font-weight:600;">Delete Permanently</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  };
+
+  renderList(citizensContainer, deletedCitizens);
+  renderList(volunteersContainer, deletedVolunteers);
+}
+
+// Restore Request
+window.restoreRequest = async function (requestId, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳';
+
+  try {
+    const item = deletedRequests.find(r => r.id === requestId);
+    if (!item) throw new Error('Data not found');
+
+    const { deletedAt, ...activeData } = item;
+
+    // 1. Write back to active collection
+    await setDoc(doc(db, 'Requests', requestId), activeData);
+
+    // 2. Delete from archive
+    await deleteDoc(doc(db, 'DeletedRequests', requestId));
+
+    showAlert('Request restored successfully.', 'success');
+    fetchAllRequests();
+    fetchDeletedData();
+  } catch (err) {
+    console.error('Restore error:', err);
+    showAlert('Restore failed: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+};
+
+// Permanently Delete Request
+window.permanentlyDeleteRequest = async function (requestId, btn) {
+  if (!confirm('Are you sure you want to permanently delete this request? This action cannot be undone.')) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳';
+
+  try {
+    await deleteDoc(doc(db, 'DeletedRequests', requestId));
+    showAlert('Request permanently deleted.', 'success');
+    fetchDeletedData();
+  } catch (err) {
+    console.error('Permanent delete error:', err);
+    showAlert('Delete failed: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+};
+
+// Restore User
+window.restoreUser = async function (uid, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳';
+
+  try {
+    const item = deletedUsers.find(u => u.uid === uid);
+    if (!item) throw new Error('Data not found');
+
+    const { deletedAt, ...activeData } = item;
+
+    // 1. Write back to active collection
+    await setDoc(doc(db, 'Users', uid), activeData);
+
+    // 2. Delete from archive
+    await deleteDoc(doc(db, 'DeletedUsers', uid));
+
+    showAlert('User restored successfully.', 'success');
+    fetchAllRequests();
+    fetchDeletedData();
+  } catch (err) {
+    console.error('Restore error:', err);
+    showAlert('Restore failed: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+};
+
+// Permanently Delete User
+window.permanentlyDeleteUser = async function (uid, btn) {
+  if (!confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳';
+
+  try {
+    await deleteDoc(doc(db, 'DeletedUsers', uid));
+    showAlert('User permanently deleted.', 'success');
+    fetchDeletedData();
+  } catch (err) {
+    console.error('Permanent delete error:', err);
+    showAlert('Delete failed: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+};
