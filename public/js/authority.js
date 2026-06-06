@@ -238,39 +238,48 @@ window.saveUser = async function () {
   }
 };
 
-async function deleteUser(uid, btn) {
-  const orig = btn?.textContent;
-  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+function deleteUser(uid, btn) {
+  const user = [...allCitizens, ...allVolunteers].find(u => u.uid === uid);
+  const name = user ? user.name : 'this user';
+  
+  window.showConfirmModal(
+    'Archive User',
+    `Are you sure you want to delete ${name}? They will be moved to the Deleted Archive (Recycle Bin).`,
+    async () => {
+      const orig = btn?.textContent;
+      if (btn) { btn.disabled = true; btn.textContent = '…'; }
 
-  try {
-    const user = [...allCitizens, ...allVolunteers].find(u => u.uid === uid);
-    if (!user) {
-      throw new Error('User data not found in local cache');
-    }
-    
-    // 1. Save copy to DeletedUsers
-    await setDoc(doc(db, 'DeletedUsers', uid), {
-      ...user,
-      deletedAt: serverTimestamp()
-    });
+      try {
+        if (!user) {
+          throw new Error('User data not found in local cache');
+        }
+        
+        // 1. Save copy to DeletedUsers
+        await setDoc(doc(db, 'DeletedUsers', uid), {
+          ...user,
+          deletedAt: serverTimestamp()
+        });
 
-    // 2. Delete from active Users
-    await deleteDoc(doc(db, 'Users', uid));
+        // 2. Delete from active Users
+        await deleteDoc(doc(db, 'Users', uid));
 
-    // 3. Update active cache and UI
-    allCitizens   = allCitizens.filter(u => u.uid !== uid);
-    allVolunteers = allVolunteers.filter(u => u.uid !== uid);
-    renderUsersList('citizensContainer',   allCitizens);
-    renderUsersList('volunteersContainer', allVolunteers);
-    showAlert('User moved to Deleted Archive.', 'success');
+        // 3. Update active cache and UI
+        allCitizens   = allCitizens.filter(u => u.uid !== uid);
+        allVolunteers = allVolunteers.filter(u => u.uid !== uid);
+        renderUsersList('citizensContainer',   allCitizens);
+        renderUsersList('volunteersContainer', allVolunteers);
+        showAlert('User moved to Deleted Archive.', 'success');
 
-    // 4. Refresh archive
-    fetchDeletedData();
-  } catch (err) {
-    console.error('Delete error:', err);
-    alert('Failed to delete user: ' + err.message);
-    if (btn) { btn.disabled = false; btn.textContent = orig; }
-  }
+        // 4. Refresh archive
+        fetchDeletedData();
+      } catch (err) {
+        console.error('Delete error:', err);
+        alert('Failed to delete user: ' + err.message);
+        if (btn) { btn.disabled = false; btn.textContent = orig; }
+      }
+    },
+    'Yes, Archive'
+  );
 }
 
 // ---- User Search Event Listeners ---------------------------
@@ -444,70 +453,82 @@ function renderTable(requests) {
 }
 
 // ---- Mark as Completed -------------------------------------
-window.markCompleted = async function (requestId, btn) {
-  if (!confirm('Are you sure you want to mark this request as completed?')) return;
+window.markCompleted = function (requestId, btn) {
+  window.showConfirmModal(
+    'Complete Request',
+    'Are you sure you want to mark this request as completed?',
+    async () => {
+      btn.disabled    = true;
+      btn.textContent = '⏳ Updating…';
 
-  btn.disabled    = true;
-  btn.textContent = '⏳ Updating…';
+      try {
+        await updateDoc(doc(db, 'Requests', requestId), {
+          status:    'Completed',
+          updatedAt: serverTimestamp()
+        });
 
-  try {
-    await updateDoc(doc(db, 'Requests', requestId), {
-      status:    'Completed',
-      updatedAt: serverTimestamp()
-    });
+        // Update local cache
+        const idx = allRequests.findIndex(r => r.id === requestId);
+        if (idx !== -1) allRequests[idx].status = 'Completed';
 
-    // Update local cache
-    const idx = allRequests.findIndex(r => r.id === requestId);
-    if (idx !== -1) allRequests[idx].status = 'Completed';
+        showAlert('Request marked as Completed.', 'success');
+        applyFilters();   // Re-render
+        updateStats(allRequests);
 
-    showAlert('Request marked as Completed.', 'success');
-    applyFilters();   // Re-render
-    updateStats(allRequests);
-
-  } catch (err) {
-    console.error('Update error:', err);
-    showAlert('Failed to update: ' + err.message, 'error');
-    btn.disabled    = false;
-    btn.textContent = '✅ Mark Done';
-  }
+      } catch (err) {
+        console.error('Update error:', err);
+        showAlert('Failed to update: ' + err.message, 'error');
+        btn.disabled    = false;
+        btn.textContent = '✅ Mark Done';
+      }
+    },
+    'Yes, Complete'
+  );
 };
 
 // ---- Delete Request ----------------------------------------
-window.deleteRequest = async function (requestId, btn) {
-  const origText = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '⏳...';
+window.deleteRequest = function (requestId, btn) {
+  window.showConfirmModal(
+    'Archive Request',
+    'Are you sure you want to delete this request? It will be moved to the Deleted Archive (Recycle Bin).',
+    async () => {
+      const origText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳...';
 
-  try {
-    const reqData = allRequests.find(r => r.id === requestId);
-    if (!reqData) {
-      throw new Error('Request not found in local cache');
-    }
+      try {
+        const reqData = allRequests.find(r => r.id === requestId);
+        if (!reqData) {
+          throw new Error('Request not found in local cache');
+        }
 
-    // 1. Save copy to DeletedRequests
-    await setDoc(doc(db, 'DeletedRequests', requestId), {
-      ...reqData,
-      deletedAt: serverTimestamp()
-    });
+        // 1. Save copy to DeletedRequests
+        await setDoc(doc(db, 'DeletedRequests', requestId), {
+          ...reqData,
+          deletedAt: serverTimestamp()
+        });
 
-    // 2. Delete from active Requests
-    await deleteDoc(doc(db, 'Requests', requestId));
-    
-    // 3. Update local cache
-    allRequests = allRequests.filter(r => r.id !== requestId);
-    
-    showAlert('Request moved to Deleted Archive.', 'success');
-    applyFilters();   // Re-render
-    updateStats(allRequests);
+        // 2. Delete from active Requests
+        await deleteDoc(doc(db, 'Requests', requestId));
+        
+        // 3. Update local cache
+        allRequests = allRequests.filter(r => r.id !== requestId);
+        
+        showAlert('Request moved to Deleted Archive.', 'success');
+        applyFilters();   // Re-render
+        updateStats(allRequests);
 
-    // 4. Refresh archive
-    fetchDeletedData();
-  } catch (err) {
-    console.error('Delete error:', err);
-    showAlert('Failed to delete: ' + err.message, 'error');
-    btn.disabled = false;
-    btn.innerHTML = origText;
-  }
+        // 4. Refresh archive
+        fetchDeletedData();
+      } catch (err) {
+        console.error('Delete error:', err);
+        showAlert('Failed to delete: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    },
+    'Yes, Archive'
+  );
 };
 
 // ---- Assign Volunteer --------------------------------------
@@ -806,22 +827,28 @@ window.restoreRequest = async function (requestId, btn) {
 };
 
 // Permanently Delete Request
-window.permanentlyDeleteRequest = async function (requestId, btn) {
-  if (!confirm('Are you sure you want to permanently delete this request? This action cannot be undone.')) return;
-  const orig = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = '⏳';
+window.permanentlyDeleteRequest = function (requestId, btn) {
+  window.showConfirmModal(
+    'Permanently Delete',
+    'Are you sure you want to permanently delete this request? This action cannot be undone.',
+    async () => {
+      const orig = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳';
 
-  try {
-    await deleteDoc(doc(db, 'DeletedRequests', requestId));
-    showAlert('Request permanently deleted.', 'success');
-    fetchDeletedData();
-  } catch (err) {
-    console.error('Permanent delete error:', err);
-    showAlert('Delete failed: ' + err.message, 'error');
-    btn.disabled = false;
-    btn.textContent = orig;
-  }
+      try {
+        await deleteDoc(doc(db, 'DeletedRequests', requestId));
+        showAlert('Request permanently deleted.', 'success');
+        fetchDeletedData();
+      } catch (err) {
+        console.error('Permanent delete error:', err);
+        showAlert('Delete failed: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = orig;
+      }
+    },
+    'Yes, Purge'
+  );
 };
 
 // Restore User
@@ -854,20 +881,29 @@ window.restoreUser = async function (uid, btn) {
 };
 
 // Permanently Delete User
-window.permanentlyDeleteUser = async function (uid, btn) {
-  if (!confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
-  const orig = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = '⏳';
+window.permanentlyDeleteUser = function (uid, btn) {
+  const user = deletedUsers.find(u => u.uid === uid);
+  const name = user ? user.name : 'this user';
 
-  try {
-    await deleteDoc(doc(db, 'DeletedUsers', uid));
-    showAlert('User permanently deleted.', 'success');
-    fetchDeletedData();
-  } catch (err) {
-    console.error('Permanent delete error:', err);
-    showAlert('Delete failed: ' + err.message, 'error');
-    btn.disabled = false;
-    btn.textContent = orig;
-  }
+  window.showConfirmModal(
+    'Permanently Delete',
+    `Are you sure you want to permanently delete ${name}? This action cannot be undone.`,
+    async () => {
+      const orig = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳';
+
+      try {
+        await deleteDoc(doc(db, 'DeletedUsers', uid));
+        showAlert('User permanently deleted.', 'success');
+        fetchDeletedData();
+      } catch (err) {
+        console.error('Permanent delete error:', err);
+        showAlert('Delete failed: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = orig;
+      }
+    },
+    'Yes, Purge'
+  );
 };

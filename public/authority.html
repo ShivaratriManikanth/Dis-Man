@@ -18,7 +18,8 @@
     #editUserModal {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.5);
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
       z-index: 1000;
       display: none;
       align-items: center;
@@ -30,7 +31,7 @@
       padding: 28px;
       width: 100%;
       max-width: 420px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
       position: relative;
     }
     .edit-modal-box label {
@@ -52,7 +53,7 @@
       transition: border-color 0.2s;
     }
     .edit-modal-box input:focus {
-      border-color: #1d3557;
+      border-color: #38bdf8;
     }
 
     /* Map for authority */
@@ -61,7 +62,7 @@
       height: 450px;
       border-radius: 12px;
       border: 2px solid #e2e8f0;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
       margin-bottom: 0px;
     }
 
@@ -114,12 +115,12 @@
       top: 0;
       bottom: 0;
       width: 260px;
-      background: #111827;
+      background: #0f172a;
       color: #f8fafc;
       display: flex;
       flex-direction: column;
       padding: 24px 16px;
-      box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+      box-shadow: 4px 0 10px rgba(0,0,0,0.05);
       z-index: 100;
       transition: transform 0.3s ease;
       box-sizing: border-box;
@@ -157,17 +158,20 @@
       font-weight: 600;
       font-size: 0.9rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+      transition: all 0.25s ease;
     }
 
     .sidebar-item:hover {
-      background: #1f2937;
+      background: #1e293b;
       color: #f8fafc;
     }
 
     .sidebar-item.active {
-      background: #38bdf8;
-      color: #0f172a;
+      background: #1e293b;
+      color: #38bdf8;
+      border-left-color: #38bdf8;
+      border-radius: 0 8px 8px 0;
     }
 
     .sidebar-item-icon {
@@ -218,7 +222,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 20px;
-      background: #111827;
+      background: #0f172a;
       color: #fff;
       position: fixed;
       top: 0;
@@ -276,6 +280,41 @@
       .mobile-header {
         display: flex;
       }
+    }
+
+    /* Custom Confirmation Modal CSS */
+    #confirmModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      animation: fadeInModal 0.25s ease-out;
+    }
+    .confirm-modal-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px 24px;
+      width: 90%;
+      max-width: 380px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+      text-align: center;
+      border: 1px solid #e2e8f0;
+      transform: scale(0.95);
+      transition: transform 0.2s ease-out;
+    }
+    #confirmModal.open {
+      display: flex;
+    }
+    #confirmModal.open .confirm-modal-box {
+      transform: scale(1);
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
 </head>
@@ -594,7 +633,45 @@
         }
       });
     };
+
+    // Global Confirmation Modal system
+    let confirmSuccessCallback = null;
+    
+    window.showConfirmModal = function (title, message, onConfirm, confirmText = 'Confirm') {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = message;
+      
+      const successBtn = document.getElementById('confirmSuccessBtn');
+      successBtn.textContent = confirmText;
+      
+      confirmSuccessCallback = onConfirm;
+      document.getElementById('confirmModal').classList.add('open');
+    };
+
+    window.closeConfirmModal = function () {
+      document.getElementById('confirmModal').classList.remove('open');
+      confirmSuccessCallback = null;
+    };
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', window.closeConfirmModal);
+    document.getElementById('confirmSuccessBtn').addEventListener('click', () => {
+      if (confirmSuccessCallback) confirmSuccessCallback();
+      window.closeConfirmModal();
+    });
   </script>
+  <!-- Custom Confirmation Modal Overlay -->
+  <div id="confirmModal">
+    <div class="confirm-modal-box">
+      <div style="font-size:2.8rem; margin-bottom:12px; color:#ef4444;">⚠️</div>
+      <h3 id="confirmTitle" style="margin:0 0 10px 0; color:#0f172a; font-size:1.25rem; font-weight:700;">Confirm Action</h3>
+      <p id="confirmMessage" style="margin:0 0 24px 0; color:#64748b; font-size:0.9rem; line-height:1.5; padding:0 10px;">Are you sure you want to proceed?</p>
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button id="confirmCancelBtn" style="flex:1; padding:10px 16px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; color:#475569; font-weight:600; font-size:0.9rem; cursor:pointer; transition: background 0.2s;">Cancel</button>
+        <button id="confirmSuccessBtn" style="flex:1; padding:10px 16px; background:#ef4444; border:none; border-radius:8px; color:#fff; font-weight:600; font-size:0.9rem; cursor:pointer; transition: background 0.2s;">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Google Maps JS API -->
   <script
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAcWQBQEDw_9_YXamLaiJPijzMpy0T6Vhw&callback=initAuthorityMap"
