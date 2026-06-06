@@ -11,7 +11,6 @@
   <meta name="theme-color" content="#1d3557" />
   <style>
     /* Authority-specific overrides */
-    .navbar { background: #1d3557; }
     .stat-card { border-top-color: #1d3557; }
     .page-header h1 { color: #1d3557; }
 
@@ -59,11 +58,11 @@
     /* Map for authority */
     #authorityMap {
       width: 100%;
-      height: 400px;
+      height: 450px;
       border-radius: 12px;
       border: 2px solid #e2e8f0;
       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      margin-bottom: 28px;
+      margin-bottom: 0px;
     }
 
     /* Archive styling */
@@ -97,156 +96,387 @@
     .archive-tab-content.active {
       display: block;
     }
+
+    /* Layout structural styles for the sidebar */
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f8fafc;
+      display: flex;
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* Navigation Sidebar */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 260px;
+      background: #111827;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+      z-index: 100;
+      transition: transform 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 32px;
+      padding-left: 8px;
+      color: #38bdf8;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-item:hover {
+      background: #1f2937;
+      color: #f8fafc;
+    }
+
+    .sidebar-item.active {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+    .sidebar-item-icon {
+      font-size: 1.25rem;
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid #1f2937;
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+
+    .sidebar-logout {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .sidebar-logout:hover {
+      background: #dc2626;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      margin-left: 260px;
+      flex: 1;
+      padding: 40px;
+      min-height: 100vh;
+      box-sizing: border-box;
+      transition: margin-left 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    /* Mobile Header bar */
+    .mobile-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: #111827;
+      color: #fff;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      box-sizing: border-box;
+      z-index: 90;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .hamburger-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* Sections visibility styling */
+    .dashboard-section {
+      display: none;
+    }
+
+    .dashboard-section.active {
+      display: block;
+      animation: fadeInSection 0.35s ease-out;
+    }
+
+    @keyframes fadeInSection {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive Mobile Layout rules */
+    @media (max-width: 992px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        transform: translateX(-100%);
+        top: 60px;
+        bottom: 0;
+        height: calc(100vh - 60px);
+        width: 260px;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0;
+        padding: 20px;
+        padding-top: 80px;
+      }
+      .mobile-header {
+        display: flex;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <header class="navbar">
-    <div class="brand">
-      <span class="icon">🏛️</span>
-      Authority Control Panel
+  <!-- MOBILE HEADER -->
+  <header class="mobile-header">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="hamburger-btn" onclick="toggleMobileSidebar()">☰</button>
+      <span style="font-weight:700; font-size:1.1rem; color:#38bdf8;">🏛️ Authority Panel</span>
     </div>
-    <nav>
-      <a href="authority.html">Dashboard</a>
-      <button id="logoutBtn">Logout</button>
-    </nav>
   </header>
 
-  <!-- MAIN -->
-  <main class="page-wrapper">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebarPanel">
+    <div class="sidebar-brand">
+      <span>🏛️</span>
+      <span>Authority Panel</span>
+    </div>
+    
+    <ul class="sidebar-menu">
+      <li>
+        <a class="sidebar-item active" onclick="switchMainSection('sect-requests', this)">
+          <span class="sidebar-item-icon">📋</span>
+          <span>Emergency Requests</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-item" onclick="switchMainSection('sect-locations', this)">
+          <span class="sidebar-item-icon">🗺️</span>
+          <span>Request Locations</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-item" onclick="switchMainSection('sect-citizens', this)">
+          <span class="sidebar-item-icon">👤</span>
+          <span>Active Citizens</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-item" onclick="switchMainSection('sect-volunteers', this)">
+          <span class="sidebar-item-icon">🤝</span>
+          <span>Active Volunteers</span>
+        </a>
+      </li>
+      <li>
+        <a class="sidebar-item" onclick="switchMainSection('sect-archive', this)">
+          <span class="sidebar-item-icon">🗑️</span>
+          <span>Deleted Archive</span>
+        </a>
+      </li>
+    </ul>
 
-    <div class="page-header">
-      <h1>🏛️ Authority Dashboard</h1>
-      <p id="authorityName">Loading…</p>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="sidebar-logout">
+        <span>🚪</span> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTAINER -->
+  <main class="main-content">
+
+    <div class="page-header" style="margin-bottom:28px;">
+      <h1 style="margin: 0 0 6px 0;">🏛️ Authority Dashboard</h1>
+      <p id="authorityName" style="margin:0; color:#64748b;">Loading…</p>
     </div>
 
-    <!-- Filter & Requests Table -->
-    <div class="card" style="margin-bottom: 28px;">
-      <div class="section-header">
-        <h2>All Emergency Requests</h2>
-        <button class="btn btn-secondary" id="refreshBtn">🔄 Refresh</button>
+    <!-- Section 1: All Emergency Requests -->
+    <section id="sect-requests" class="dashboard-section active">
+      <!-- Stats Summary -->
+      <div class="stats-grid" style="margin-bottom: 28px;">
+        <div class="stat-card red">
+          <div class="stat-number" id="statTotal">—</div>
+          <div class="stat-label">Total Requests</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-number" id="statPending">—</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-number" id="statCompleted">—</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-number" id="statCritical">—</div>
+          <div class="stat-label">Critical</div>
+        </div>
       </div>
 
-      <!-- Filter Bar -->
-      <div class="filter-bar">
-        <select id="filterStatus">
-          <option value="all">All Statuses</option>
-          <option value="Pending">Pending</option>
-          <option value="Completed">Completed</option>
-        </select>
-        <select id="filterType">
-          <option value="all">All Types</option>
-          <option value="Flood">Flood</option>
-          <option value="Fire">Fire</option>
-          <option value="Earthquake">Earthquake</option>
-          <option value="Cyclone">Cyclone</option>
-          <option value="Landslide">Landslide</option>
-          <option value="Medical Emergency">Medical Emergency</option>
-          <option value="Building Collapse">Building Collapse</option>
-          <option value="Chemical Spill">Chemical Spill</option>
-          <option value="Tsunami">Tsunami</option>
-          <option value="Other">Other</option>
-        </select>
-        <select id="filterSeverity">
-          <option value="all">All Severities</option>
-          <option value="Critical">Critical</option>
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
-        </select>
-      </div>
+      <!-- Requests Table Card -->
+      <div class="card" style="margin-bottom: 28px;">
+        <div class="section-header">
+          <h2>All Emergency Requests</h2>
+          <button class="btn btn-secondary" id="refreshBtn">🔄 Refresh</button>
+        </div>
 
-      <div id="alertBox"></div>
-      <div id="loadingSpinner" class="spinner"></div>
+        <div class="filter-bar">
+          <select id="filterStatus">
+            <option value="all">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <select id="filterType">
+            <option value="all">All Types</option>
+            <option value="Flood">Flood</option>
+            <option value="Fire">Fire</option>
+            <option value="Earthquake">Earthquake</option>
+            <option value="Cyclone">Cyclone</option>
+            <option value="Landslide">Landslide</option>
+            <option value="Medical Emergency">Medical Emergency</option>
+            <option value="Building Collapse">Building Collapse</option>
+            <option value="Chemical Spill">Chemical Spill</option>
+            <option value="Tsunami">Tsunami</option>
+            <option value="Other">Other</option>
+          </select>
+          <select id="filterSeverity">
+            <option value="all">All Severities</option>
+            <option value="Critical">Critical</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
 
-      <!-- Table -->
-      <div class="table-wrap" id="tableContainer"></div>
-    </div>
+        <div id="alertBox"></div>
+        <div id="loadingSpinner" class="spinner"></div>
 
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card red">
-        <div class="stat-number" id="statTotal">—</div>
-        <div class="stat-label">Total Requests</div>
+        <div class="table-wrap" id="tableContainer"></div>
       </div>
-      <div class="stat-card orange">
-        <div class="stat-number" id="statPending">—</div>
-        <div class="stat-label">Pending</div>
-      </div>
-      <div class="stat-card green">
-        <div class="stat-number" id="statCompleted">—</div>
-        <div class="stat-label">Completed</div>
-      </div>
-      <div class="stat-card blue">
-        <div class="stat-number" id="statCritical">—</div>
-        <div class="stat-label">Critical</div>
-      </div>
-    </div>
+    </section>
 
-    <!-- Map overview -->
-    <div class="card map-wrap" style="padding:20px;">
-      <h3>🗺️ All Request Locations</h3>
-      <p style="color:#888;font-size:0.85rem;margin:4px 0 14px;">Pins show all active emergency locations.</p>
-      <div id="authorityMap"></div>
-    </div>
+    <!-- Section 2: Request Locations Map -->
+    <section id="sect-locations" class="dashboard-section">
+      <div class="card map-wrap" style="padding:20px;">
+        <h3>🗺️ All Request Locations</h3>
+        <p style="color:#888;font-size:0.85rem;margin:4px 0 14px;">Pins show all active emergency locations on the map.</p>
+        <div id="authorityMap"></div>
+      </div>
+    </section>
 
-    <!-- Users Section -->
-    <div style="display: flex; flex-direction: column; gap: 28px; margin-bottom: 28px;">
-      <!-- Citizens -->
+    <!-- Section 3: Active Citizens -->
+    <section id="sect-citizens" class="dashboard-section">
       <div class="card" style="padding:0;">
         <div class="section-header" style="margin-bottom:0; border-bottom:1px solid #f1f5f9; padding:20px;">
           <h3 style="margin:0; font-size:1.15rem; color:#1e293b;">👤 Active Citizens</h3>
           <input type="text" id="searchCitizens" placeholder="Search citizens..." style="padding:8px 14px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; width:220px; outline:none; background:#f8fafc;">
         </div>
-        <div class="table-wrap" id="citizensContainer" style="max-height: 400px; overflow-y: auto;">
+        <div class="table-wrap" id="citizensContainer" style="max-height: 450px; overflow-y: auto;">
           <div class="spinner" style="margin:20px auto;"></div>
         </div>
       </div>
-      <!-- Volunteers -->
+    </section>
+
+    <!-- Section 4: Active Volunteers -->
+    <section id="sect-volunteers" class="dashboard-section">
       <div class="card" style="padding:0;">
         <div class="section-header" style="margin-bottom:0; border-bottom:1px solid #f1f5f9; padding:20px;">
           <h3 style="margin:0; font-size:1.15rem; color:#1e293b;">🤝 Active Volunteers</h3>
           <input type="text" id="searchVolunteers" placeholder="Search volunteers..." style="padding:8px 14px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; width:220px; outline:none; background:#f8fafc;">
         </div>
-        <div class="table-wrap" id="volunteersContainer" style="max-height: 400px; overflow-y: auto;">
+        <div class="table-wrap" id="volunteersContainer" style="max-height: 450px; overflow-y: auto;">
           <div class="spinner" style="margin:20px auto;"></div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Deleted Archive Section -->
-    <div class="card" style="padding:0; margin-bottom: 28px; border-top: 4px solid #64748b;">
-      <div class="section-header" style="margin-bottom:0; border-bottom:1px solid #f1f5f9; padding:20px;">
-        <h3 style="margin:0; font-size:1.15rem; color:#475569;">🗑️ Deleted Archive (Recycle Bin)</h3>
-      </div>
-      <div class="archive-tabs">
-        <button class="archive-tab-btn active" onclick="switchArchiveTab('delRequests')">Deleted Requests</button>
-        <button class="archive-tab-btn" onclick="switchArchiveTab('delCitizens')">Deleted Citizens</button>
-        <button class="archive-tab-btn" onclick="switchArchiveTab('delVolunteers')">Deleted Volunteers</button>
-      </div>
-      
-      <!-- Deleted Requests Tab Content -->
-      <div id="delRequests" class="archive-tab-content active">
-        <div class="table-wrap" id="deletedRequestsContainer" style="max-height: 300px; overflow-y: auto;">
-          <p style="color:#888;font-size:0.85rem;padding:20px;">Loading archive...</p>
+    <!-- Section 5: Deleted Archive (Recycle Bin) -->
+    <section id="sect-archive" class="dashboard-section">
+      <div class="card" style="padding:0; border-top: 4px solid #64748b;">
+        <div class="section-header" style="margin-bottom:0; border-bottom:1px solid #f1f5f9; padding:20px;">
+          <h3 style="margin:0; font-size:1.15rem; color:#475569;">🗑️ Deleted Archive (Recycle Bin)</h3>
+        </div>
+        <div class="archive-tabs">
+          <button class="archive-tab-btn active" onclick="switchArchiveTab('delRequests')">Deleted Requests</button>
+          <button class="archive-tab-btn" onclick="switchArchiveTab('delCitizens')">Deleted Citizens</button>
+          <button class="archive-tab-btn" onclick="switchArchiveTab('delVolunteers')">Deleted Volunteers</button>
+        </div>
+        
+        <!-- Deleted Requests Tab Content -->
+        <div id="delRequests" class="archive-tab-content active">
+          <div class="table-wrap" id="deletedRequestsContainer" style="max-height: 350px; overflow-y: auto;">
+            <p style="color:#888;font-size:0.85rem;padding:20px;">Loading archive...</p>
+          </div>
+        </div>
+
+        <!-- Deleted Citizens Tab Content -->
+        <div id="delCitizens" class="archive-tab-content">
+          <div class="table-wrap" id="deletedCitizensContainer" style="max-height: 350px; overflow-y: auto;">
+            <p style="color:#888;font-size:0.85rem;padding:20px;">Loading archive...</p>
+          </div>
+        </div>
+
+        <!-- Deleted Volunteers Tab Content -->
+        <div id="delVolunteers" class="archive-tab-content">
+          <div class="table-wrap" id="deletedVolunteersContainer" style="max-height: 350px; overflow-y: auto;">
+            <p style="color:#888;font-size:0.85rem;padding:20px;">Loading archive...</p>
+          </div>
         </div>
       </div>
-
-      <!-- Deleted Citizens Tab Content -->
-      <div id="delCitizens" class="archive-tab-content">
-        <div class="table-wrap" id="deletedCitizensContainer" style="max-height: 300px; overflow-y: auto;">
-          <p style="color:#888;font-size:0.85rem;padding:20px;">Loading archive...</p>
-        </div>
-      </div>
-
-      <!-- Deleted Volunteers Tab Content -->
-      <div id="delVolunteers" class="archive-tab-content">
-        <div class="table-wrap" id="deletedVolunteersContainer" style="max-height: 300px; overflow-y: auto;">
-          <p style="color:#888;font-size:0.85rem;padding:20px;">Loading archive...</p>
-        </div>
-      </div>
-    </div>
+    </section>
 
   </main>
 
@@ -302,6 +532,43 @@
       // If requests are already fetched, plot them
       if (window.pendingRequestsToPlot) {
         window.plotMapMarkersGlobal(window.pendingRequestsToPlot);
+      }
+    };
+
+    // Sidebar visibility toggle for mobile devices
+    window.toggleMobileSidebar = function () {
+      const sidebar = document.getElementById('sidebarPanel');
+      sidebar.classList.toggle('open');
+    };
+
+    // Main section switching logic
+    window.switchMainSection = function (sectionId, btn) {
+      // Toggle sidebar active item class
+      const items = document.querySelectorAll('.sidebar-item');
+      items.forEach(item => item.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Toggle main dashboard section active class
+      const sections = document.querySelectorAll('.dashboard-section');
+      sections.forEach(sec => sec.classList.remove('active'));
+      
+      const targetSec = document.getElementById(sectionId);
+      if (targetSec) {
+        targetSec.classList.add('active');
+      }
+
+      // Close sidebar automatically on mobile after click
+      const sidebar = document.getElementById('sidebarPanel');
+      if (sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+      }
+
+      // Google Maps fix: Trigger resize and center when map section becomes visible
+      if (sectionId === 'sect-locations' && window.authorityMap) {
+        google.maps.event.trigger(window.authorityMap, 'resize');
+        if (window.pendingRequestsToPlot) {
+          window.plotMapMarkersGlobal(window.pendingRequestsToPlot);
+        }
       }
     };
 
