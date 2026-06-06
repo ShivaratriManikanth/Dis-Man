@@ -105,12 +105,16 @@ function renderUsersList(containerId, usersList) {
     return;
   }
 
+  const isVolList = (containerId === 'volunteersContainer');
+
   let html = `
     <table style="width:100%;border-collapse:collapse;">
       <thead>
         <tr>
           <th>NAME</th><th>EMAIL</th><th>PHONE</th>
-          <th>JOINED</th><th>PASSWORD</th><th>ACTIONS</th>
+          <th>JOINED</th><th>PASSWORD</th>
+          ${isVolList ? '<th>STATUS</th>' : ''}
+          <th>ACTIONS</th>
         </tr>
       </thead>
       <tbody>
@@ -131,6 +135,21 @@ function renderUsersList(containerId, usersList) {
          </div>`
       : '<span style="color:#94a3b8;font-size:0.8rem;">Not stored</span>';
 
+    let statusCell = '';
+    if (isVolList) {
+      if (u.verified === true) {
+        statusCell = `<td data-label="STATUS"><span style="color:#2dc653;font-weight:bold;font-size:0.83rem;">✅ Verified</span></td>`;
+      } else {
+        statusCell = `
+          <td data-label="STATUS">
+            <button data-action="verify-vol" data-uid="${u.uid}" class="btn"
+                    style="background:#38bdf8;color:#0f172a;padding:5px 10px;font-size:11px;border-radius:4px;border:none;font-weight:700;">
+              Verify
+            </button>
+          </td>`;
+      }
+    }
+
     html += `
       <tr>
         <td data-label="NAME"><strong>${esc(u.name)}</strong></td>
@@ -138,6 +157,7 @@ function renderUsersList(containerId, usersList) {
         <td data-label="PHONE" style="color:#475569;">${esc(u.phone || '—')}</td>
         <td data-label="JOINED" style="color:#64748b;">${joinedDate}</td>
         <td data-label="PASSWORD">${pwdCell}</td>
+        ${statusCell}
         <td data-label="ACTIONS">
           <div style="display:flex;gap:6px;">
             <button data-action="edit" data-uid="${u.uid}"
@@ -167,7 +187,35 @@ function renderUsersList(containerId, usersList) {
     }
     if (action === 'edit')   openEditModal(uid);
     if (action === 'delete') deleteUser(uid, btn);
+    if (action === 'verify-vol') verifyVolunteer(uid, btn);
   });
+}
+
+// ---- Verify Volunteer Approval -----------------------------
+async function verifyVolunteer(uid, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳';
+
+  try {
+    await updateDoc(doc(db, 'Users', uid), {
+      verified: true,
+      updatedAt: serverTimestamp()
+    });
+
+    showAlert('Volunteer verified successfully.', 'success');
+
+    // Update local cache
+    const idx = allVolunteers.findIndex(v => v.uid === uid);
+    if (idx !== -1) allVolunteers[idx].verified = true;
+
+    renderUsersList('volunteersContainer', allVolunteers);
+  } catch (err) {
+    console.error('Verify error:', err);
+    showAlert('Failed to verify: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
 }
 
 // ---- Edit User Modal ---------------------------------------

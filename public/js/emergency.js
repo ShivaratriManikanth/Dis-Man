@@ -186,6 +186,30 @@ document.getElementById('emergencyForm').addEventListener('submit', async (e) =>
 
     showAlert(`✅ Emergency request submitted! Request ID: ${docRef.id}`, 'success');
 
+    // Trigger Email Notification to Admin (async, non-blocking)
+    fetch('/api/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type: type,
+        description: description,
+        severity: severity,
+        contactName: contactName,
+        contactPhone: contactPhone,
+        latitude: userLat || null,
+        longitude: userLng || null
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log('Admin email notification dispatch response:', data);
+    })
+    .catch(err => {
+      console.error('Admin email notification dispatch error:', err);
+    });
+
     // Reset form
     document.getElementById('emergencyForm').reset();
     userLat = null;

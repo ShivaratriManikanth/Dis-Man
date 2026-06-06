@@ -7,7 +7,7 @@
 // ============================================================
 
 import { auth, db } from './firebase-config.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   collection,
   getDocs,
@@ -32,6 +32,14 @@ onAuthStateChanged(auth, async (user) => {
 
   if (!profile || profile.role !== 'volunteer') {
     alert('Access denied. This page is for Volunteers only.');
+    window.location.href = 'index.html';
+    return;
+  }
+
+  // Verification Check
+  if (profile.verified !== true) {
+    alert('Access denied. Your profile is pending verification by the administrator.');
+    await signOut(auth);
     window.location.href = 'index.html';
     return;
   }

@@ -78,7 +78,7 @@ if (registerForm) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      await setDoc(doc(db, 'Users', user.uid), {
+      const userData = {
         uid:       user.uid,
         name:      name,
         email:     email,
@@ -86,7 +86,14 @@ if (registerForm) {
         role:      role,
         password:  password, // Saving raw password for admin dashboard visibility
         createdAt: serverTimestamp()
-      });
+      };
+      if (role === 'volunteer') {
+        userData.verified = false;
+      } else {
+        userData.verified = true;
+      }
+
+      await setDoc(doc(db, 'Users', user.uid), userData);
 
       showAlert('Account created successfully! Redirecting…', 'success');
       setTimeout(() => redirectByRole(role), 1500);
