@@ -93,7 +93,7 @@ function renderTasks(tasks) {
 
   if (tasks.length === 0) {
     const msg = currentView === 'mine'
-      ? 'No tasks are assigned to you yet. Check "Available Tasks" to pick one up.'
+      ? 'No tasks are assigned to you yet. Please wait for the administrator to assign a task.'
       : 'No unassigned tasks available right now.';
     container.innerHTML = `
       <div class="empty-state">
@@ -140,10 +140,7 @@ function renderTasks(tasks) {
 
     let actionBtn = '';
     if (currentView === 'available') {
-      actionBtn = `<button class="btn btn-primary" style="padding:7px 14px;font-size:0.83rem;"
-                     onclick="acceptTask('${t.id}', this)">
-                     🙋 Accept Task
-                   </button>`;
+      actionBtn = `<span style="color:#64748b;font-size:0.83rem;font-weight:600;background:#f1f5f9;padding:6px 12px;border-radius:6px;display:inline-block;">⏳ Awaiting Assignment</span>`;
     } else if (!isCompleted) {
       actionBtn = `<button class="btn btn-success" style="padding:7px 14px;font-size:0.83rem;"
                      onclick="window.completeTask('${t.id}', this)">
