@@ -69,7 +69,29 @@ if (registerForm) {
 
     if (!name)  { showAlert('Please enter your full name.', 'error'); return; }
     if (!email) { showAlert('Please enter a valid email.', 'error'); return; }
-    if (password.length < 6) { showAlert('Password must be at least 6 characters.', 'error'); return; }
+    
+    // Password validation logic
+    if (password.length < 8) {
+      showAlert('Password must be at least 8 characters long.', 'error');
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      showAlert('Password must contain at least one uppercase letter.', 'error');
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      showAlert('Password must contain at least one lowercase letter.', 'error');
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      showAlert('Password must contain at least one number.', 'error');
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(password)) {
+      showAlert('Password must contain at least one special character.', 'error');
+      return;
+    }
+    
     if (password !== confirmPassword) { showAlert('Passwords do not match.', 'error'); return; }
 
     setLoading('registerBtn', true);
